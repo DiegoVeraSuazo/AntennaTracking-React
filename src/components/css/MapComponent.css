@@ -1,0 +1,15 @@
+
+.start-marker {
+    background-color: green; /* Ejemplo: color de fondo verde */
+    width: 20px; /* Ejemplo: ancho del marcador */
+    height: 20px; /* Ejemplo: altura del marcador */
+    border-radius: 50%; /* Ejemplo: hacer un círculo */
+  }
+  
+  .end-marker {
+    background-color: red; /* Ejemplo: color de fondo rojo */
+    width: 20px; /* Ejemplo: ancho del marcador */
+    height: 20px; /* Ejemplo: altura del marcador */
+    border-radius: 50%; /* Ejemplo: hacer un círculo */
+  }
+  

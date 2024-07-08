@@ -1,0 +1,59 @@
+import React, { useState, useEffect } from 'react';
+import io from 'socket.io-client';
+import { AppBar, Toolbar, Typography, Container, Box, Paper } from '@mui/material';
+import ChartComponent from './components/ChartComponent';
+import MapComponent from './components/MapComponent';
+import SatelliteList from './components/satelliteList';
+import Sidebar from './components/global/Sidebar';
+
+const socket = io('http://localhost:4000');
+
+function App() {
+
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    socket.on('data', (newData) => {
+      setData((prevData) => [...prevData, newData]);
+    });
+
+    return () => socket.off('data');
+  }, []);
+
+  return (
+    <div className="App">
+      <Sidebar />
+      <Container>
+        <Box my={4}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Welcome to the Machine Control Dashboard
+          </Typography>
+          {/* Aquí irán tus componentes */}
+          {/* Componente de Pruba de tabla que se actualiza cada 10 s */}
+          {/* <ChartComponent data={data} /> */}
+          <Box display="flex" >
+            <Paper
+              elevation={24}
+              sx={{
+                width: '100%',
+                height: '100%',
+                borderRadius: 1,
+                bgcolor: 'primary.main',
+              }}
+            >
+              <SatelliteList align = 'center'/> {/* Usar el componente de lista de satélites */}
+            </Paper>
+            <Box ml={5}>
+              <Typography variant="h5" component="h2" gutterBottom>
+                Mapa
+              </Typography>
+              <MapComponent /> {/* Usar el componente del mapa */}
+            </Box>
+          </Box>
+        </Box>
+      </Container>
+    </div>
+  );
+}
+
+export default App;

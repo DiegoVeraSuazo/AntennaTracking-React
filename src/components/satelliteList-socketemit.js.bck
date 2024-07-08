@@ -1,0 +1,133 @@
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography, CardActionArea,  Paper, Box, CircularProgress, IconButton, Input } from '@mui/material';
+import { Refresh as RefreshIcon, Search as SearchIcon } from '@mui/icons-material'; // Importar SearchIcon
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:4000');
+
+const SatelliteList = ({ onSatelliteSelect }) => {
+  const [satellites, setSatellites] = useState([]);
+  const [filteredSatellites, setFilteredSatellites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchData = (data) => {
+      console.log('Received satellite data:', data); // Log the received data
+      try {
+        // If the data is already an object, no need to parse
+        const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+        setSatellites(parsedData); // Adjust to access 'Satellite Data' key
+        setFilteredSatellites(parsedData); // Initialize filtered data
+      } catch (e) {
+        console.error('Error parsing satellite data:', e);
+        setError('Failed to parse satellite data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleError = (error) => {
+      console.error('Error fetching satellites:', error);
+      setError('Failed to fetch satellites');
+    };
+
+    // Suscripción al evento 'satellitesData' enviado por el servidor
+    socket.on('satellitesData', fetchData);
+    socket.on('satellitesDataError', handleError);
+
+    // Realizar la solicitud de datos al montar el componente
+    socket.emit('fetchSatellites');
+
+    // Limpiar suscripciones al desmontar el componente
+    return () => {
+      socket.off('satellitesData', fetchData);
+      socket.off('satellitesDataError', handleError);
+    };
+  }, []);
+
+  const handleUpdateSatellites = () => {
+    setLoading(true);
+    socket.emit('updateSatellitesData');
+  };
+
+  const handleSearch = () => {
+    // Realizar la búsqueda cuando se hace clic en el ícono de búsqueda
+    const results = satellites.filter(satellite =>
+      satellite.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredSatellites(results);
+  };
+
+  const handleSearchInputChange = (e) => {
+    // Actualizar el término de búsqueda mientras se escribe en el TextField
+    setSearchTerm(e.target.value);
+  };
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  return (
+    <div>
+      <Paper elevation={24} sx={{ flexWrap: 'wrap', padding: 0, margin: 3, width: 'auto', height: 'auto'}}>
+        <Typography variant="h4" component="h2" align='center'>
+          Satelites Disponibles
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: 1 }}>
+          <Input
+            sx={{ flex: 1, marginRight: 1 }}
+            label="Buscar Satélites"
+            variant="outlined"
+            fullWidth
+            value={searchTerm}
+            onBlur={handleSearchInputChange} // Actualizar el término de búsqueda
+          />
+          <IconButton onClick={handleSearch} color="primary">
+            <SearchIcon />
+          </IconButton>
+          <IconButton onClick={handleUpdateSatellites} color="primary">
+            <RefreshIcon />
+          </IconButton>
+        </Box>
+      </Paper>
+      <Paper elevation={24} sx={{ flexWrap: 'wrap', padding: 2, margin: 3, width: 'auto', height: 'auto'}}>
+        <Box sx={{ display: 'flex', height: '60vh', overflow: 'hidden' }}>
+          <Box sx={{ overflowY: 'auto', height: '100%', width: '100%', paddingRight: 2 }}>
+            {filteredSatellites.map((satellite) => (
+              <Card 
+                key={satellite.sat_id} 
+                sx={{ marginBottom: 1, border: '1px solid #ccc' }} 
+                onClick={() => onSatelliteSelect(satellite)}
+              >
+                <CardActionArea>
+                  <CardContent>
+                    <Typography gutterBottom variant="h6" component="div">
+                      {satellite.name}
+                    </Typography>
+                    <Typography gutterBottom variant="subtitle1" component="div">
+                      {satellite.names}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      ID Satelite: {satellite.sat_id}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      ID NORAD: {satellite.norad_cat_id}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            ))}
+          </Box>
+        </Box>
+      </Paper>
+    </div>
+  );
+};
+
+export default SatelliteList;

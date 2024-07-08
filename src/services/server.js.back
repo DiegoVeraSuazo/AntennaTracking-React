@@ -1,0 +1,246 @@
+const io = require('socket.io')(4000, {
+  cors: {
+    origin: "*",
+  },
+});
+
+const {
+  fetchAntennaRotorLimits, fetchAntennaRotorPulses, fetchAntennaRotorStatus, stopAntennaRotor, moveAntennaRotorToPosition, 
+  trackSatelliteAntenna, moveAntennaRotorLeft, moveAntennaRotorRight, moveAntennaRotorUp, moveAntennaRotorDown, 
+  moveAntennaRotorLeftUp,moveAntennaRotorRightUp, moveAntennaRotorLeftDown, moveAntennaRotorRightDown,
+  stopMovementRotor, setPowerMotor, cleanAllSettings
+} = require('./antennaService');
+
+const { fetchSatellites, getSatellitesFromDB, fetchSatellitePrediction, fetchSatelliteRoute } = require('./satelliteService');
+
+let satellitesData = [];
+
+// Función para iniciar la llamada inicial de datos de satélites
+const startSatellitesDataCall = async () => {
+  try {
+    satellitesData = await getSatellitesFromDB();
+
+    if (satellitesData.length === 0) {
+      satellitesData = await fetchSatellites();
+    }
+
+    io.emit('satellitesData', satellitesData);
+  } catch (error) {
+    io.emit('satellitesDataError', { message: 'Error fetching satellites data' });
+  }
+};
+
+// Función para actualizar los datos de satélites y emitirlos a los clientes
+const updateSatellitesData = async () => {
+  try {
+    satellitesData = await fetchSatellites();
+    io.emit('satellitesData', satellitesData);
+  } catch (error) {
+    io.emit('satellitesDataError', { message: 'Error updating satellite data' });
+  }
+};
+
+// Manejo de conexión de nuevos clientes
+io.on('connection', async (socket) => {
+  console.log('New client connected');
+
+  startSatellitesDataCall();
+
+  // Enviar datos iniciales al cliente al conectarse
+  socket.emit('satellitesData', satellitesData);
+
+  // Manejar solicitud de predicción de satélite
+  socket.on('fetchSatellitePrediction', async (noradCatId) => {
+    try {
+      const prediction = await fetchSatellitePrediction(noradCatId);
+      console.log('Emitiendo:', prediction.Satelite)
+      socket.emit('satellitePrediction', prediction );
+    } catch (error) {
+      socket.emit('satellitePredictionError', { noradCatId, message: 'Error fetching satellite prediction' });
+    }
+  });
+
+  // Manejar solicitud de ruta de satélite
+  socket.on('fetchSatelliteRoute', async (noradCatId) => {
+    try {
+      const route = await fetchSatelliteRoute(noradCatId);
+      console.log('Emitiendo:', route.Satelite)
+      socket.emit('satelliteRoute', route );
+    } catch (error) {
+      socket.emit('satelliteRouteError', { noradCatId, message: 'Error fetching satellite route' });
+    }
+  });
+
+  // Manejar solicitud de actualización de datos de satélites
+  socket.on('updateSatellitesData', async () => {
+    try {
+      await updateSatellitesData();
+      socket.emit('satellitesData', satellitesData); // Emitir los datos actualizados de nuevo al cliente
+    } catch (error) {
+      socket.emit('satellitesDataError', { message: 'Error fetching update on satellite data' });
+    }
+  });
+
+  // Eventos relacionados con el rotor de la antena
+
+  socket.on('fetchAntennaRotorLimits', async () => {
+    try {
+      const limits = await fetchAntennaRotorLimits();
+      socket.emit('antennaRotorLimits', limits);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error fetching antenna rotor limits' });
+    }
+  });
+
+  socket.on('fetchAntennaRotorPulses', async () => {
+    try {
+      const pulses = await fetchAntennaRotorPulses();
+      socket.emit('antennaRotorPulses', pulses);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error fetching antenna rotor pulses' });
+    }
+  });
+
+  socket.on('fetchAntennaRotorStatus', async () => {
+    try {
+      const status = await fetchAntennaRotorStatus();
+      socket.emit('antennaRotorStatus', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error fetching antenna rotor status' });
+    }
+  });
+
+  socket.on('stopAntennaRotor', async () => {
+    try {
+      const status = await stopAntennaRotor();
+      socket.emit('antennaRotorStopped', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error stopping antenna rotor' });
+    }
+  });
+
+  socket.on('moveAntennaRotorToPosition', async ({ azimuth, elevation }) => {
+    try {
+      const status = await moveAntennaRotorToPosition(azimuth, elevation);
+      socket.emit('antennaRotorMovedToPosition', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor to position' });
+    }
+  });
+
+  socket.on('trackSatelliteAntenna', async ({ dataPrediction }) => {
+    try {
+      const status = await trackSatelliteAntenna(dataPrediction);
+      socket.emit('antennaTrackingSatellite', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor to position' });
+    }
+  });
+
+  socket.on('moveAntennaRotorLeft', async () => {
+    try {
+      const status = await moveAntennaRotorLeft();
+      socket.emit('antennaRotorMovedLeft', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor left' });
+    }
+  });
+
+  socket.on('moveAntennaRotorRight', async () => {
+    try {
+      const status = await moveAntennaRotorRight();
+      socket.emit('antennaRotorMovedRight', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor right' });
+    }
+  });
+
+  socket.on('moveAntennaRotorUp', async () => {
+    try {
+      const status = await moveAntennaRotorUp();
+      socket.emit('antennaRotorMovedUp', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor up' });
+    }
+  });
+
+  socket.on('moveAntennaRotorDown', async () => {
+    try {
+      const status = await moveAntennaRotorDown();
+      socket.emit('antennaRotorMovedDown', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor down' });
+    }
+  });
+
+  socket.on('moveAntennaRotorLeftUp', async () => {
+    try {
+      const status = await moveAntennaRotorLeftUp();
+      socket.emit('antennaRotorMovedLeftUp', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor left up' });
+    }
+  });
+
+  socket.on('moveAntennaRotorRightUp', async () => {
+    try {
+      const status = await moveAntennaRotorRightUp();
+      socket.emit('antennaRotorMovedRightUp', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor right up' });
+    }
+  });
+
+  socket.on('moveAntennaRotorLeftDown', async () => {
+    try {
+      const status = await moveAntennaRotorLeftDown();
+      socket.emit('antennaRotorMovedLeftDown', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor left down' });
+    }
+  });
+
+  socket.on('moveAntennaRotorRightDown', async () => {
+    try {
+      const status = await moveAntennaRotorRightDown();
+      socket.emit('antennaRotorMovedRightDown', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error moving antenna rotor right down' });
+    }
+  });
+
+  socket.on('stopMovementRotor', async () => {
+    try {
+      const status = await stopMovementRotor();
+      socket.emit('movementRotorStopped', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error stopping movement of antenna rotor' });
+    }
+  });
+
+  socket.on('setPowerMotor', async (powerInput) => {
+    try {
+      const status = await setPowerMotor(powerInput);
+      socket.emit('powerMotorSet', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error setting power motor' });
+    }
+  });
+
+  socket.on('cleanAllSettings', async () => {
+    try {
+      const status = await cleanAllSettings();
+      socket.emit('cleanSettings', status);
+    } catch (error) {
+      socket.emit('antennaRotorError', { message: 'Error cleaning rotor settings' });
+    }
+  });
+
+  // Manejar desconexión de clientes
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
+// Actualizar datos de satélites cada 3600000 ms (1 hora)
+setInterval(updateSatellitesData, 3600000);

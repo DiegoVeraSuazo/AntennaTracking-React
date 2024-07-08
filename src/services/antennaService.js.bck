@@ -1,0 +1,217 @@
+//antennaService.js
+
+const axios = require('axios');
+
+const fetchAntennaRotorLimits = async () => {
+  try {
+    const response = await axios.get('http://192.168.1.18:5019/limits', {
+    });
+    console.log('Limites:' + response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching satellites:', error);
+    throw error;
+  }
+};
+
+const fetchAntennaRotorPulses = async () => {
+  try {
+    const response = await axios.get('http://192.168.1.18:5019/pulses', {
+    });
+    console.log('Pulsos:' + response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching satellites:', error);
+    throw error;
+  }
+};
+
+const fetchAntennaRotorStatus = async () => {
+  try {
+    const response = await axios.get('http://192.168.1.18:5019/status', {
+    });
+    console.log('Status:' + response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching satellites:', error);
+    throw error;
+  }
+};
+
+const stopAntennaRotor = async () => {
+  try {
+    const response = await axios.get('http://192.168.1.18:5019/stop', {
+    });
+    console.log('Status:' + response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching satellites:', error);
+    throw error;
+  }
+}
+
+const moveAntennaRotorToPosition = async (azimuth, elevation) => {
+  try {
+      const response = await axios.post(`http://192.168.1.18:5019/moveToPosition`, {
+        Azimuth: azimuth,
+        Elevation: elevation
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error moving the satellite to position:', error);
+      throw error;
+  }
+}
+
+const trackSatelliteAntenna =async (dataPrediction) => {
+  try {
+    const response = await axios.post(`http://192.168.1.18:5019/trackPrediction`,{
+      jsonDataPrediction: dataPrediction
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error in the tracking process to the satelite' + error.message);
+  }
+}
+
+const moveAntennaRotorLeft = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveLeft`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const moveAntennaRotorRight = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveRight`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const moveAntennaRotorUp = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveUp`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const moveAntennaRotorDown = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveDown`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const moveAntennaRotorLeftUp = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveLeftUp`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const moveAntennaRotorRightUp = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveRightUp`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const moveAntennaRotorLeftDown = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveLeftDown`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const moveAntennaRotorRightDown = async () => { 
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/moveRightDown`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const stopMovementRotor = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/stop`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const setPowerMotor = async (powerInput) => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/setPowerMotor`, {
+          PowerInput: powerInput
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching the satellite route:', error);
+      throw error;
+  }
+}
+
+const cleanAllSettings = async () => {
+  try {
+      const response = await axios.get(`http://192.168.1.18:5019/cleanSettings`, {
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error cleaning the Settings:', error);
+      throw error;
+  }
+}
+
+module.exports = {
+    stopAntennaRotor,
+    fetchAntennaRotorStatus,
+    moveAntennaRotorToPosition,
+    fetchAntennaRotorLimits,
+    fetchAntennaRotorPulses,
+    trackSatelliteAntenna,
+    moveAntennaRotorLeft,
+    moveAntennaRotorRight,
+    moveAntennaRotorUp,
+    moveAntennaRotorDown,
+    moveAntennaRotorLeftUp,
+    moveAntennaRotorRightUp,
+    moveAntennaRotorLeftDown,
+    moveAntennaRotorRightDown,
+    stopMovementRotor,
+    setPowerMotor,
+    cleanAllSettings
+};
