@@ -20,7 +20,7 @@ let startIcon = L.icon({
 })
 
 let endIcon = L.icon({
-  iconUrl: '/endFlag.svg', // Ruta a tu imagen start.svg
+  iconUrl: '/EndFlag.svg', // Ruta a tu imagen start.svg
   iconSize: [30, 30], // Tamaño de la imagen
   iconAnchor: [5, 30] // Punto de la imagen que se ubicará en la posición del marcador
 })
